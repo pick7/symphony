@@ -1,4 +1,4 @@
-name: make-all
+name: ci
 
 on:
   pull_request:
@@ -7,32 +7,22 @@ on:
       - main
 
 jobs:
-  make-all:
+  ci:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: elixir
+        working-directory: nodejs
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up mise tools
-        uses: jdx/mise-action@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          install: true
-          cache: true
-          working_directory: elixir
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: nodejs/package-lock.json
 
-      - name: Cache deps and build
-        uses: actions/cache@v4
-        with:
-          path: |
-            elixir/deps
-            elixir/_build
-          key: ${{ runner.os }}-mix-${{ hashFiles('elixir/mix.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-mix-
-
-      - name: Verify make all
-        run: make all
+      - name: Install dependencies
+        run: npm ci

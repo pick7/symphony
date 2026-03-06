@@ -1,13 +1,9 @@
-# Symphony
+# Symphony-nodejs
 
-**Symphony** is a coding agent orchestrator that turns project work into isolated, autonomous implementation runs, allowing teams to manage work instead of supervising coding agents.
-
-[![Symphony demo video preview](.github/media/symphony-demo-poster.jpg)](.github/media/symphony-demo.mp4)
-
-_In this [demo video](.github/media/symphony-demo.mp4), Symphony monitors a Linear board for work and spawns agents to handle the tasks. The agents complete the tasks and provide proof of work: CI status, PR review feedback, complexity analysis, and walkthrough videos. When accepted, the agents land the PR safely. Engineers do not need to supervise Codex; they can manage the work at a higher level._
+**Symphony-nodejs** is a coding agent orchestrator that turns project work into isolated, autonomous implementation runs, allowing teams to manage work instead of supervising coding agents.
 
 > [!WARNING]
-> Symphony is a low-key engineering preview for testing in trusted environments.
+> Symphony-nodejs is a low-key engineering preview for testing in trusted environments.
 
 ---
 
@@ -16,13 +12,10 @@ _In this [demo video](.github/media/symphony-demo.mp4), Symphony monitors a Line
 - [Overview](#overview)
 - [Core Features](#core-features)
 - [System Architecture](#system-architecture)
-- [Two Implementations](#two-implementations)
-  - [Elixir Implementation (Linear + Codex)](#elixir-implementation-linear--codex)
-  - [Node.js Implementation (Jira + GitLab + AI)](#nodejs-implementation-jira--gitlab--ai)
+- [Technology Stack](#technology-stack)
 - [Getting Started](#getting-started)
   - [Option 1: Build Your Own](#option-1-build-your-own)
-  - [Option 2: Elixir Reference Implementation](#option-2-elixir-reference-implementation)
-  - [Option 3: Node.js Implementation](#option-3-nodejs-implementation)
+  - [Option 2: Node.js Implementation](#option-2-nodejs-implementation)
 - [Configuration Reference](#configuration-reference)
   - [WORKFLOW.md File Format](#workflowmd-file-format)
   - [Front Matter Fields](#front-matter-fields)
@@ -47,7 +40,7 @@ _In this [demo video](.github/media/symphony-demo.mp4), Symphony monitors a Line
 
 ## Overview
 
-Symphony is a long-running automation service that continuously reads work from an issue tracker (such as Linear or Jira), creates an isolated workspace for each issue, and runs a coding agent session for that issue inside the workspace.
+Symphony-nodejs is a long-running automation service that continuously reads work from an issue tracker (such as Jira), creates an isolated workspace for each issue, and runs a coding agent session for that issue inside the workspace.
 
 The service solves four core operational problems:
 
@@ -58,7 +51,7 @@ The service solves four core operational problems:
 
 ### Important Boundary
 
-- Symphony is a scheduler/runner and tracker reader.
+- Symphony-nodejs is a scheduler/runner and tracker reader.
 - Ticket writes (state transitions, comments, PR links) are typically performed by the coding agent using tools available in the workflow/runtime environment.
 - A successful run may end at a workflow-defined handoff state (for example `Human Review`), not necessarily `Done`.
 
@@ -75,7 +68,7 @@ The service solves four core operational problems:
 | Active run reconciliation | Automatically stops runs when issues move to terminal or non-active states |
 | Stall detection | Detects inactive agent sessions and triggers retry |
 | Hot reload configuration | Automatically reloads config and prompt template on `WORKFLOW.md` changes without restart |
-| Optional web dashboard | Phoenix LiveView (Elixir) or Express (Node.js) dashboard |
+| Optional web dashboard | Express dashboard |
 | JSON REST API | Runtime state query and operational debugging endpoints |
 | Token usage tracking | Tracks input/output/total token consumption of coding agent sessions |
 | Rate limit monitoring | Tracks the latest agent rate limit payload |
@@ -86,7 +79,7 @@ The service solves four core operational problems:
 
 ## System Architecture
 
-Symphony is designed with a layered architecture for portability and clarity:
+Symphony-nodejs is designed with a layered architecture for portability and clarity:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -103,7 +96,7 @@ Symphony is designed with a layered architecture for portability and clarity:
 │  Filesystem lifecycle, workspace preparation, agent protocol    │
 ├─────────────────────────────────────────────────────────────────┤
 │  Integration Layer                                              │
-│  Tracker adapter (Linear / Jira) API calls and normalization    │
+│  Tracker adapter (Jira) API calls and normalization             │
 ├─────────────────────────────────────────────────────────────────┤
 │  Observability Layer                                            │
 │  Structured logs + optional status dashboard and JSON API       │
@@ -122,33 +115,7 @@ Symphony is designed with a layered architecture for portability and clarity:
 
 ---
 
-## Two Implementations
-
-Symphony ships with two reference implementations, both following the [`SPEC.md`](SPEC.md) specification.
-
-### Elixir Implementation (Linear + Codex)
-
-| Component | Technology |
-|-----------|------------|
-| Language | Elixir ~1.19 (OTP 28) |
-| Runtime management | mise |
-| Web framework | Phoenix LiveView + Bandit |
-| HTTP client | Req |
-| YAML parsing | yaml_elixir |
-| Template engine | Solid (Liquid-compatible) |
-| Linting | Credo + Dialyzer |
-| Test framework | ExUnit (100% coverage threshold) |
-| Issue tracker | Linear (GraphQL API) |
-| Coding agent | Codex app-server (JSON-RPC stdio) |
-
-**Key capabilities:**
-- OTP supervision trees for process reliability
-- Hot code reloading during development without stopping active subagents
-- Built-in `linear_graphql` client-side tool for raw Linear GraphQL calls during agent sessions
-- Phoenix LiveView real-time dashboard
-- Compiles to a standalone executable (escript)
-
-### Node.js Implementation (Jira + GitLab + AI)
+## Technology Stack
 
 | Component | Technology |
 |-----------|------------|
@@ -168,18 +135,6 @@ Symphony ships with two reference implementations, both following the [`SPEC.md`
 - **`prompt-only` (default)** — Generates prompts from Jira issues using the WORKFLOW.md template. You copy the prompt and feed it to your AI manually.
 - **`auto`** — Sends prompts directly to your OpenAI-compatible AI endpoint, runs multi-turn conversations, and tracks token usage.
 
-### Implementation Comparison
-
-| Feature | Elixir | Node.js |
-|---------|--------|---------|
-| Issue tracker | Linear | Jira |
-| Code hosting | GitHub | GitLab |
-| Agent protocol | Codex app-server (JSON-RPC stdio) | OpenAI HTTP API (chat completions) |
-| Dashboard | Phoenix LiveView (real-time) | Express (static HTML) |
-| Test suite | Full (ExUnit + Credo + Dialyzer) | Not included |
-| CI/CD | GitHub Actions | Not included |
-| Build artifact | escript executable | Direct Node.js execution |
-
 ---
 
 ## Getting Started
@@ -191,59 +146,7 @@ Tell your favorite coding agent to build Symphony in a programming language of y
 > Implement Symphony according to the following spec:
 > https://github.com/openai/symphony/blob/main/SPEC.md
 
-### Option 2: Elixir Reference Implementation
-
-#### Prerequisites
-
-- Install [mise](https://mise.jdx.dev/) to manage Elixir/Erlang versions
-- Get a Linear Personal API Key: Linear Settings → Security & access → Personal API keys
-- Set the key as the `LINEAR_API_KEY` environment variable
-- Ensure your codebase is set up for [harness engineering](https://openai.com/index/harness-engineering/)
-
-#### Installation and Running
-
-```bash
-git clone https://github.com/openai/symphony
-cd symphony/elixir
-
-# Install runtimes (Elixir + Erlang)
-mise trust
-mise install
-
-# Install dependencies and build
-mise exec -- mix setup
-mise exec -- mix build
-
-# Start Symphony
-mise exec -- ./bin/symphony ./WORKFLOW.md
-```
-
-#### Optional CLI Flags
-
-```bash
-# Specify a custom workflow file path
-./bin/symphony /path/to/custom/WORKFLOW.md
-
-# Enable the web dashboard (specify port)
-./bin/symphony ./WORKFLOW.md --port 4000
-
-# Custom log directory
-./bin/symphony ./WORKFLOW.md --logs-root /var/log/symphony
-
-# Combine flags
-./bin/symphony ./WORKFLOW.md --port 4000 --logs-root /var/log/symphony
-```
-
-#### Setting Up for Your Repository
-
-1. Copy the `elixir/WORKFLOW.md` to your repository.
-2. Optionally copy the `commit`, `push`, `pull`, `land`, and `linear` skills from `.codex/skills/` to your repo.
-3. Customize the `WORKFLOW.md` for your project:
-   - Get your Linear project slug from the project URL.
-   - Configure the `hooks.after_create` to clone your repository.
-   - Adjust active/terminal states as needed (note: the default workflow depends on non-standard Linear statuses like "Rework", "Human Review", and "Merging").
-
-### Option 3: Node.js Implementation
+### Option 2: Node.js Implementation
 
 #### Prerequisites
 
@@ -293,14 +196,13 @@ Open http://localhost:3000 for the dashboard.
 
 ### WORKFLOW.md File Format
 
-`WORKFLOW.md` is Symphony's core configuration file, using YAML front matter + Markdown body format:
+`WORKFLOW.md` is Symphony-nodejs's core configuration file, using YAML front matter + Markdown body format:
 
 ```markdown
 ---
 # YAML front matter (runtime settings)
 tracker:
-  kind: linear
-  project_slug: "my-project-slug"
+  kind: jira
 workspace:
   root: ~/code/workspaces
 agent:
@@ -308,7 +210,7 @@ agent:
 ---
 
 <!-- Markdown body (prompt template) -->
-You are working on Linear issue {{ issue.identifier }}
+You are working on Jira issue {{ issue.identifier }}
 
 Title: {{ issue.title }}
 Description: {{ issue.description }}
@@ -327,10 +229,7 @@ Description: {{ issue.description }}
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
-| `kind` | string | — | Required. `linear` (Elixir) or `jira` / `memory` (Node.js) |
-| `endpoint` | string | `https://api.linear.app/graphql` | GraphQL endpoint (Linear) |
-| `api_key` | string | `$LINEAR_API_KEY` | API key, supports `$VAR_NAME` env resolution |
-| `project_slug` | string | — | Linear project slug (required for `linear` kind) |
+| `kind` | string | — | Required. `jira` or `memory` |
 | `active_states` | list/string | `Todo, In Progress` | Active state names |
 | `terminal_states` | list/string | `Closed, Cancelled, Canceled, Duplicate, Done` | Terminal state names |
 
@@ -365,24 +264,7 @@ Description: {{ issue.description }}
 | `max_retry_backoff_ms` | integer | `300000` (5 min) | Maximum retry backoff delay |
 | `max_concurrent_agents_by_state` | map | `{}` | Per-state concurrency limits (state keys normalized to lowercase) |
 
-#### `codex` (Codex Agent Configuration — Elixir)
-
-| Field | Type | Default | Description |
-|-------|------|---------|-------------|
-| `command` | string | `codex app-server` | Launch command (executed via `bash -lc`) |
-| `approval_policy` | string/object | implementation-defined | Codex approval policy |
-| `thread_sandbox` | string | implementation-defined | Thread sandbox mode |
-| `turn_sandbox_policy` | object | implementation-defined | Turn sandbox policy |
-| `turn_timeout_ms` | integer | `3600000` (1 hour) | Turn timeout |
-| `read_timeout_ms` | integer | `5000` | Read timeout |
-| `stall_timeout_ms` | integer | `300000` (5 min) | Stall detection timeout |
-
-**Default safety posture (Elixir):**
-- `approval_policy` defaults to `{"reject":{"sandbox_approval":true,"rules":true,"mcp_elicitations":true}}`
-- `thread_sandbox` defaults to `workspace-write`
-- `turn_sandbox_policy` defaults to a `workspaceWrite` policy rooted at the current issue workspace
-
-#### `ai` (AI Configuration — Node.js)
+#### `ai` (AI Configuration)
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
@@ -425,7 +307,7 @@ The Markdown body of `WORKFLOW.md` is the per-issue prompt template, rendered us
 **Template example:**
 
 ```markdown
-You are working on Linear issue {{ issue.identifier }}
+You are working on Jira issue {{ issue.identifier }}
 
 {% if attempt %}
 This is retry attempt #{{ attempt }}. Resume from current workspace state.
@@ -439,7 +321,7 @@ Labels: {{ issue.labels }}
 
 ### Dynamic Hot Reload
 
-Symphony watches `WORKFLOW.md` for changes and automatically reloads when modifications are detected:
+Symphony-nodejs watches `WORKFLOW.md` for changes and automatically reloads when modifications are detected:
 
 - Config changes (polling interval, concurrency limits, active/terminal states, etc.) take effect immediately for subsequent scheduling
 - Prompt template changes apply to future runs
@@ -553,38 +435,9 @@ A run attempt transitions through these phases:
 
 ## Coding Agent Integration Protocol
 
-### Elixir: Codex App-Server Protocol
+### OpenAI-Compatible HTTP API
 
-Symphony communicates with the Codex app-server via JSON-RPC over stdio:
-
-1. **Launch** — `bash -lc <codex.command>` with workspace path as working directory
-2. **Handshake** — Send `initialize` → `initialized` → `thread/start` → `turn/start` in sequence
-3. **Stream** — Read line-delimited JSON messages from stdout until turn terminates
-4. **Continue** — If continuing, issue a new `turn/start` on the same thread
-5. **Termination** — `turn/completed` (success), `turn/failed`/`turn/cancelled`/timeout/process exit (failure)
-
-**Startup handshake example:**
-
-```json
-{"id":1,"method":"initialize","params":{"clientInfo":{"name":"symphony","version":"1.0"},"capabilities":{}}}
-{"method":"initialized","params":{}}
-{"id":2,"method":"thread/start","params":{"approvalPolicy":"never","sandbox":"workspace-write","cwd":"/abs/workspace"}}
-{"id":3,"method":"turn/start","params":{"threadId":"<thread-id>","input":[{"type":"text","text":"<rendered prompt>"}],"cwd":"/abs/workspace","title":"ABC-123: Example"}}
-```
-
-**Approval and tool call handling:**
-- Command/file-change approvals are handled according to the configured policy
-- Unsupported dynamic tool calls are rejected without stalling the session
-- User input requests are treated as hard failure by default
-
-**Optional `linear_graphql` tool:**
-- Exposes raw Linear GraphQL access through the app-server session
-- Allows agents to query and mutate Linear data using Symphony's configured auth
-- Input: `{ "query": "...", "variables": { ... } }`
-
-### Node.js: OpenAI-Compatible HTTP API
-
-The Node.js implementation communicates with AI endpoints via the standard OpenAI chat completions HTTP API, supporting multi-turn conversations.
+Symphony-nodejs communicates with AI endpoints via the standard OpenAI chat completions HTTP API, supporting multi-turn conversations.
 
 ---
 
@@ -598,15 +451,7 @@ The Node.js implementation communicates with AI endpoints via the standard OpenA
 | `fetch_issues_by_states(state_names)` | Startup terminal workspace cleanup |
 | `fetch_issue_states_by_ids(issue_ids)` | Active run reconciliation (state refresh) |
 
-### Linear Integration (Elixir)
-
-- GraphQL API, default endpoint `https://api.linear.app/graphql`
-- Authentication via `Authorization` header
-- Projects filtered by `project.slugId`
-- Pagination support (default page size: 50)
-- Optional `linear_graphql` client-side tool for agent sessions
-
-### Jira Integration (Node.js)
+### Jira Integration
 
 - REST API
 - Supports filtering by project key, assignee, and status
@@ -626,7 +471,7 @@ All tracker implementations normalize issues to a common model:
 
 ### Web Dashboard
 
-Both implementations serve a human-readable dashboard at `/`, displaying:
+The dashboard is served at `/`, displaying:
 
 - Active sessions and their status
 - Retry delay queue
@@ -635,10 +480,7 @@ Both implementations serve a human-readable dashboard at `/`, displaying:
 - Recent events
 - Health/error indicators
 
-**Elixir** uses Phoenix LiveView for real-time updates.
-**Node.js** uses Express with a static HTML dashboard.
-
-![Symphony Elixir screenshot](.github/media/elixir-screenshot.png)
+The dashboard uses Express with a static HTML page.
 
 ### JSON REST API
 
@@ -738,7 +580,7 @@ Both implementations serve a human-readable dashboard at `/`, displaying:
 
 ### Restart Recovery
 
-Symphony uses intentionally in-memory state. After restart, recovery happens through:
+Symphony-nodejs uses intentionally in-memory state. After restart, recovery happens through:
 
 1. Startup terminal workspace cleanup
 2. Fresh polling of active issues
@@ -777,7 +619,6 @@ No retry timers or running sessions are restored from prior process memory.
 
 ### Hardening Recommendations
 
-- Tighten Codex approval and sandbox settings
 - Add external isolation layers (OS/container/VM sandboxing, network restrictions)
 - Filter which issues, projects, or labels are eligible for dispatch
 - Reduce available tools, credentials, filesystem paths, and network destinations to the minimum needed
@@ -788,32 +629,6 @@ No retry timers or running sessions are restored from prior process memory.
 ---
 
 ## Testing
-
-### Elixir
-
-```bash
-cd elixir
-
-# Run the full quality gate (format check + lint + coverage + dialyzer)
-make all
-
-# Or run individual targets
-make fmt-check   # Format check
-make lint         # Credo linting + @spec check
-make coverage     # ExUnit tests (100% coverage threshold)
-make dialyzer     # Type checking
-make build        # Compile to escript
-```
-
-The Elixir test suite covers:
-- Workflow and config parsing (front matter, defaults, env resolution)
-- Workspace management and safety invariants
-- Issue tracker client (normalization, pagination, error handling)
-- Orchestrator dispatch, reconciliation, and retry logic
-- Coding-agent app-server client protocol
-- Prompt rendering with strict variable checking
-
-### Node.js
 
 ```bash
 cd nodejs
@@ -827,7 +642,7 @@ npm run dev       # Development mode (file watch auto-restart)
 ## Project Structure
 
 ```
-symphony/
+symphony-nodejs/
 ├── README.md                         # Project overview (original)
 ├── README.zh-CN.md                   # Chinese README
 ├── README.en.md                      # English detailed README
@@ -835,9 +650,7 @@ symphony/
 ├── LICENSE                           # Apache License 2.0
 │
 ├── .github/
-│   ├── workflows/
-│   │   ├── make-all.yml              # CI: format, lint, coverage, dialyzer
-│   │   └── pr-description-lint.yml   # PR description validation
+│   ├── workflows/                    # CI workflows
 │   ├── pull_request_template.md      # PR template
 │   └── media/                        # Demo video, screenshots
 │
@@ -848,49 +661,7 @@ symphony/
 │       ├── push/SKILL.md             # Push skill
 │       ├── pull/SKILL.md             # Pull skill
 │       ├── land/SKILL.md             # Land/merge skill
-│       ├── linear/SKILL.md           # Linear interaction skill
 │       └── debug/SKILL.md            # Debug skill
-│
-├── elixir/                           # Elixir/OTP implementation
-│   ├── lib/
-│   │   ├── symphony_elixir/
-│   │   │   ├── cli.ex               # CLI entry point
-│   │   │   ├── config.ex            # Typed configuration layer
-│   │   │   ├── workflow.ex           # WORKFLOW.md parser
-│   │   │   ├── workflow_store.ex     # File watcher + hot reload
-│   │   │   ├── orchestrator.ex       # Poll/dispatch/retry/reconciliation
-│   │   │   ├── agent_runner.ex       # Per-issue turn runner
-│   │   │   ├── workspace.ex          # Per-issue workspace management
-│   │   │   ├── prompt_builder.ex     # Liquid template rendering
-│   │   │   ├── tracker.ex            # Tracker adapter interface
-│   │   │   ├── status_dashboard.ex   # Status dashboard logic
-│   │   │   ├── http_server.ex        # HTTP server management
-│   │   │   ├── log_file.ex           # Log file management
-│   │   │   ├── linear/
-│   │   │   │   ├── client.ex         # Linear GraphQL client
-│   │   │   │   ├── adapter.ex        # Linear data adapter
-│   │   │   │   └── issue.ex          # Linear issue model
-│   │   │   ├── codex/
-│   │   │   │   ├── app_server.ex     # Codex app-server client
-│   │   │   │   └── dynamic_tool.ex   # Dynamic tools (linear_graphql)
-│   │   │   └── tracker/
-│   │   │       └── memory.ex         # In-memory tracker adapter
-│   │   └── symphony_elixir_web/
-│   │       ├── endpoint.ex           # Phoenix endpoint
-│   │       ├── router.ex             # Route definitions
-│   │       ├── live/
-│   │       │   └── dashboard_live.ex # LiveView dashboard
-│   │       └── controllers/
-│   │           └── observability_api_controller.ex  # JSON API
-│   ├── test/                         # ExUnit tests
-│   ├── config/config.exs             # Mix configuration
-│   ├── mix.exs                       # Project definition and dependencies
-│   ├── Makefile                      # Build and test targets
-│   ├── WORKFLOW.md                   # Example workflow
-│   ├── AGENTS.md                     # Agent coding conventions
-│   └── docs/
-│       ├── logging.md                # Logging conventions
-│       └── token_accounting.md       # Token accounting docs
 │
 └── nodejs/                           # Node.js implementation
     ├── src/
@@ -929,7 +700,7 @@ The full language-agnostic specification is in [`SPEC.md`](SPEC.md), covering:
 - Orchestration state machine design
 - Polling, scheduling, and reconciliation algorithms
 - Workspace management and safety specification
-- Coding-agent app-server protocol
+- Coding-agent protocol
 - Issue tracker integration contract
 - Prompt construction and context assembly
 - Logging and observability specification
@@ -945,42 +716,33 @@ You can provide `SPEC.md` to any coding agent and have it implement a fully conf
 
 ## FAQ
 
-### Why was Elixir chosen for the reference implementation?
-
-Elixir is built on Erlang/BEAM/OTP, which excels at supervising long-running processes. It has an active ecosystem of tools and libraries. It also supports hot code reloading without stopping actively running subagents, which is very useful during development.
-
 ### How do I set this up for my own codebase?
 
-Launch `codex` in your repo, give it the URL to the Symphony repo, and ask it to set things up:
+Check out [nodejs/README.md](nodejs/README.md) for detailed setup instructions. You can also ask your favorite coding agent:
 
-> Set up Symphony for my repository based on
-> https://github.com/openai/symphony/blob/main/elixir/README.md
+> Set up Symphony-nodejs for my repository based on
+> https://github.com/openai/symphony/blob/main/nodejs/README.md
 
-### What is the relationship between Symphony and Codex?
-
-Symphony is the orchestration layer, responsible for fetching work from issue trackers, managing workspaces, dispatching tasks, and handling retries. Codex is the execution layer, responsible for actual code writing and tool invocation. Symphony communicates with Codex via the app-server protocol (JSON-RPC over stdio).
-
-### Can I use other coding agents instead of Codex?
+### Can I use other coding agents?
 
 Yes. The Node.js implementation demonstrates how to use a generic OpenAI-compatible HTTP API. You can also implement your own agent integration based on `SPEC.md`, as long as the agent supports the required communication protocol.
 
 ### Where should WORKFLOW.md be placed?
 
-It is recommended to place `WORKFLOW.md` in the repository root and version-control it. This allows teams to manage agent prompts and runtime settings alongside their code. Symphony looks for `WORKFLOW.md` in the current working directory by default, but a custom path can be specified via CLI argument.
+It is recommended to place `WORKFLOW.md` in the repository root and version-control it. This allows teams to manage agent prompts and runtime settings alongside their code. Symphony-nodejs looks for `WORKFLOW.md` in the current working directory by default, but a custom path can be specified via CLI argument.
 
-### How do I harden Symphony for production?
+### How do I harden Symphony-nodejs for production?
 
 Refer to Section 15 of `SPEC.md` for security and operational safety guidance:
-- Tighten Codex approval and sandbox settings
 - Add container/VM isolation layers
 - Restrict network access
 - Filter which issues are eligible for dispatch
 - Minimize available tools and credentials
 - Run under a dedicated OS user with restricted permissions
 
-### What happens when Symphony restarts?
+### What happens when Symphony-nodejs restarts?
 
-Symphony uses in-memory state, so no retry timers or running sessions survive a restart. Recovery is tracker-driven: the service performs startup terminal workspace cleanup, polls for active issues, and re-dispatches eligible work automatically.
+Symphony-nodejs uses in-memory state, so no retry timers or running sessions survive a restart. Recovery is tracker-driven: the service performs startup terminal workspace cleanup, polls for active issues, and re-dispatches eligible work automatically.
 
 ### How does the multi-turn agent loop work?
 
