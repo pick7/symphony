@@ -1,15 +1,15 @@
-# Symphony Node.js
+# Symphony-nodejs
 
-Coding agent orchestrator adapted for **Jira + GitLab + company OpenAI-compatible AI**.
+Coding agent orchestrator for **Jira + GitLab + OpenAI-compatible AI**.
 
-Based on the [Symphony specification](../SPEC.md), rewritten from Elixir to Node.js with the following adaptations:
+Based on the [Symphony specification](../SPEC.md).
 
-| Original (Elixir) | This version (Node.js) |
+| Component | Technology |
 |---|---|
-| Linear | **Jira** REST API |
-| GitHub | **GitLab** API |
-| Codex app-server (JSON-RPC stdio) | **OpenAI-compatible HTTP API** (chat completions) |
-| Elixir/OTP | **Node.js** (ES modules) |
+| Issue tracker | **Jira** REST API |
+| Code hosting | **GitLab** API |
+| Coding agent | **OpenAI-compatible HTTP API** (chat completions) |
+| Runtime | **Node.js** (ES modules) |
 
 ## Two Modes
 

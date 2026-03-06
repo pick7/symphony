@@ -18,5 +18,5 @@
 
 #### Test Plan
 
-- [ ] `make -C elixir all`
+- [ ] `cd nodejs && npm ci`
 - [ ] <!-- Additional targeted checks (list below) -->

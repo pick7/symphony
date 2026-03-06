@@ -1,5 +1,5 @@
 {
-  "name": "symphony-node",
+  "name": "symphony-nodejs",
   "version": "1.0.0",
   "description": "Coding agent orchestrator for Jira + GitLab + OpenAI-compatible AI",
   "main": "src/index.js",
